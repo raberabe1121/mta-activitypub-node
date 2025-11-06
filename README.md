@@ -43,6 +43,7 @@ graph TD
     C -->|Accept| I
     E -->|Create Post| I
 ```
+---
 
 ## 📂 ディレクトリ構成
 
