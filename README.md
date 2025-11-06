@@ -19,10 +19,10 @@ HTTPではなく **SMTP/LMTPをIPC（プロセス間通信）として再利用*
 ## 🧩 アーキテクチャ
 ```mermaid
 graph TD
-  subgraph Mail Transport
+  subgraph Mail_Transport
     A[Postfix] --> B[Dovecot LMTP]
-    B --> C[/activitypub-lmtp.py/]
-    B --> D[/activitypub_lmtp_server.py/]
+    B --> C[[activitypub-lmtp.py]]
+    B --> D[[activitypub_lmtp_server.py]]
   end
 
   subgraph Application
@@ -38,6 +38,6 @@ graph TD
   end
 
   I -->|Follow| A
-  C -->|Accept| I
-  E -->|Create(Post)| I
+    C -->|Accept| I
+    E -->|Create(Post)| I
 ```
