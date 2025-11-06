@@ -64,5 +64,26 @@ graph TD
 └── Maildir/                      # Dovecotローカルメール保存領域
 ```
 
+---
+
+## 🧩 アーキテクチャ図（Mermaid）
+```mermaid
+graph TD
+    subgraph Mail Transfer
+        A[Postfix MTA] --> B[Dovecot LMTP]
+        B -->|Pipe| C[/usr/local/bin/activitypub-lmtp.py]
+    end
+
+    subgraph Application Layer
+        C --> D[inbox.json]
+        D --> E[Flask Web UI (app.py)]
+        E -->|POST /api/outbox_post| F[/usr/local/bin/activitypub-send.py]
+        F --> B
+    end
+
+    subgraph User Interface
+        E -->|/| G[index.html (Inbox Viewer)]
+    end
+```
 
 
