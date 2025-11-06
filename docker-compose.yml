@@ -10,6 +10,7 @@ services:
       - "5000:5000"
     volumes:
       - ./data/activitypub:/var/www/activitypub
+      - ./scripts:/usr/local/bin  # activitypub-send.py を呼び出せるように追加
     depends_on:
       - lmtp
     environment:
@@ -19,16 +20,19 @@ services:
   postfix:
     image: instrumentisto/postfix
     container_name: activitypub_postfix
+    hostname: postfix
     environment:
       - MAILNAME=ipcnode.local
       - SMTP_SERVER=postfix
     volumes:
       - ./data/mail:/var/mail
+      - ./data/postfix:/etc/postfix
     restart: unless-stopped
 
   dovecot:
     image: dovecot/dovecot
     container_name: activitypub_dovecot
+    hostname: dovecot
     volumes:
       - ./data/mail:/var/mail
       - ./data/dovecot:/etc/dovecot
