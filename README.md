@@ -20,11 +20,30 @@ HTTPではなく **SMTP/LMTPをIPC（プロセス間通信）として再利用*
 
 Here is a simple flow chart:
 
+Here is a working version:
+
 ```mermaid
 graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
+    subgraph MailTransport;
+        A[Postfix]; --> B[Dovecot LMTP];
+        B --> C[activitypub-lmtp.py];
+        B --> D[activitypub_lmtp_server.py];
+    end;
+
+    subgraph Application;
+        C --> E[Flask Web UI (app.py)];
+        D --> E;
+        E --> F[inbox.json];
+        E --> G[outbox.json];
+        E --> H[messages.json];
+    end;
+
+    subgraph External;
+        I[Remote Actor (example.com)];
+    end;
+
+    I -->|Follow| A;
+    C -->|Accept| I;
+    E -->|Create(Post)| I;
 ```
 
