@@ -18,14 +18,10 @@ HTTPではなく **SMTP/LMTPをIPC（プロセス間通信）として再利用*
 
 ## 🧩 アーキテクチャ
 
-Here is a simple flow chart:
-
-Here is a working version:
-
 ```mermaid
 graph TD;
     subgraph MailTransport;
-        A[Postfix]; --> B[Dovecot LMTP];
+        A[Postfix] --> B[Dovecot LMTP];
         B --> C[activitypub-lmtp.py];
         B --> D[activitypub_lmtp_server.py];
     end;
