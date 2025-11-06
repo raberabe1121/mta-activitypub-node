@@ -43,6 +43,9 @@ graph TD
     C -->|Accept| I
     E -->|Create Post| I
 ```
+この構成により、ActivityPubのメッセージ（Follow / Accept / Createなど）を
+メール伝送（LMTP）経由で自動処理・可視化できます。
+
 ---
 
 ## 📂 ディレクトリ構成
@@ -63,30 +66,6 @@ graph TD
 │   └── index.html                # Inbox/Outboxビュー（Follow/Acceptフィルタ付き）
 └── Maildir/                      # Dovecotローカルメール保存領域
 ```
-
----
-
-## 🧩 アーキテクチャ図（Mermaid）
-```mermaid
-graph TD
-    subgraph Mail_Transfer
-        A[Postfix MTA] --> B[Dovecot LMTP]
-        B -->|Pipe| C["/usr/local/bin/activitypub-lmtp.py"]
-    end
-
-    subgraph Application_Layer
-        C --> D[inbox.json]
-        D --> E["Flask Web UI (app.py)"]
-        E -->|"POST /api/outbox_post"| F["/usr/local/bin/activitypub-send.py"]
-        F --> B
-    end
-
-    subgraph User_Interface
-        E -->|/| G["index.html (Inbox Viewer)"]
-    end
-```
-この構成により、ActivityPubのメッセージ（Follow / Accept / Createなど）を
-メール伝送（LMTP）経由で自動処理・可視化できます。
 
 ---
 
