@@ -87,8 +87,9 @@ http://localhost:5000
 curl -X POST http://127.0.0.1:5000/api/outbox_post \
   -H "Content-Type: application/json" \
   -d '{"type":"Follow","actor":"https://example.com/users/alice","object":"https://ipcnode.local/users/follow"}'
-
 ```
+成功すると /var/www/activitypub/inbox.json に Follow が入り、
+activitypub-lmtp.py により自動で Accept が返信されます。
 
 - 主要コンテナ
 
