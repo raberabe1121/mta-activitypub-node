@@ -38,6 +38,6 @@ graph TD
   end
 
   I -->|Follow| A
-    C -->|Accept| I
-    E -->|Create(Post)| I
+  C -->|Accept| I
+  E -->|Create(Post)| I
 ```
