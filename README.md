@@ -75,12 +75,19 @@ mta-activitypub/
 
 ---
 
-## 🚀 起動方法（Docker Compose）
+## 🚀 起動方法（Docker Compose）と動作確認
 ```bash
-git clone https://github.com/<yourname>/mta-activitypub.git
-cd mta-activitypub
+# 起動
+docker-compose up -d --build
 
-docker-compose up -d
+# Web UI にアクセス
+http://localhost:5000
+
+# Follow メッセージ送信
+curl -X POST http://127.0.0.1:5000/api/outbox_post \
+  -H "Content-Type: application/json" \
+  -d '{"type":"Follow","actor":"https://example.com/users/alice","object":"https://ipcnode.local/users/follow"}'
+
 ```
 
 - 主要コンテナ
