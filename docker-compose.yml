@@ -1,48 +1,45 @@
 version: "3.9"
 
 services:
-  postfix:
-    image: catatnight/postfix
-    container_name: activitypub-postfix
-    environment:
-      - maildomain=ipcnode.local
-      - smtp_user=follow:password
-    restart: unless-stopped
-    volumes:
-      - ./postfix:/etc/postfix
-      - ./mail:/var/mail
-    network_mode: "host"
-
-  dovecot:
-    image: dovecot/dovecot
-    container_name: activitypub-dovecot
-    restart: unless-stopped
-    volumes:
-      - ./mail:/var/mail
-      - ./dovecot:/etc/dovecot
-      - ./usr/local/bin:/usr/local/bin
-    network_mode: "host"
-
-  lmtp_server:
-    build:
-      context: .
-      dockerfile: Dockerfile.lmtp
-    container_name: activitypub-lmtp
-    restart: unless-stopped
-    volumes:
-      - ./var/www/activitypub:/var/www/activitypub
-      - ./usr/local/bin:/usr/local/bin
-    command: ["python3", "/usr/local/bin/activitypub_lmtp_server.py"]
-    network_mode: "host"
-
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-    container_name: activitypub-web
-    restart: unless-stopped
+    build: ./web
+    container_name: activitypub_web
     ports:
       - "5000:5000"
     volumes:
-      - ./var/www/activitypub:/var/www/activitypub
-    command: ["python3", "/var/www/activitypub/app.py"]
+      - ./data/activitypub:/var/www/activitypub
+    depends_on:
+      - lmtp
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+
+  postfix:
+    image: instrumentisto/postfix
+    container_name: activitypub_postfix
+    environment:
+      - MAILNAME=ipcnode.local
+      - SMTP_SERVER=postfix
+    volumes:
+      - ./data/mail:/var/mail
+    restart: unless-stopped
+
+  dovecot:
+    image: dovecot/dovecot
+    container_name: activitypub_dovecot
+    volumes:
+      - ./data/mail:/var/mail
+      - ./data/dovecot:/etc/dovecot
+    depends_on:
+      - postfix
+    restart: unless-stopped
+
+  lmtp:
+    build: ./lmtp
+    container_name: activitypub_lmtp
+    ports:
+      - "2626:2626"
+    volumes:
+      - ./data/activitypub:/var/www/activitypub
+      - ./scripts:/usr/local/bin
+    restart: unless-stopped
