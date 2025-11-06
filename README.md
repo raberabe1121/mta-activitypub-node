@@ -72,6 +72,7 @@ mta-activitypub/
         ├── outbox.json
         ├── messages.json
         └── templates/
+            └── inbox.html
 
 ```
 
