@@ -20,6 +20,7 @@ HTTPではなく **SMTP/LMTPをIPC（プロセス間通信）として再利用*
 
 ```mermaid
 graph TD;
+
     subgraph MailTransport;
         A[Postfix] --> B[Dovecot LMTP];
         B --> C[activitypub-lmtp.py];
@@ -41,5 +42,6 @@ graph TD;
     I -->|Follow| A;
     C -->|Accept| I;
     E -->|Create(Post)| I;
+
 ```
 
