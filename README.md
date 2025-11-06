@@ -85,5 +85,48 @@ graph TD
         E -->|/| G["index.html (Inbox Viewer)"]
     end
 ```
+この構成により、ActivityPubのメッセージ（Follow / Accept / Createなど）を
+メール伝送（LMTP）経由で自動処理・可視化できます。
+
+---
+
+## 🚀 起動方法（Docker Compose）
+```bash
+git clone https://github.com/<yourname>/mta-activitypub.git
+cd mta-activitypub
+
+docker-compose up -d
+```
+
+---
+
+## 主要コンテナ
+| サービス | 役割 |
+|-----------|------|
+| postfix | メール送信・配送制御 |
+| dovecot | LMTP配信先（activitypub-lmtp.pyへパイプ） |
+| web | Flaskアプリ（/var/www/activitypub/app.py） |
+| lmtp | LMTPサーバ（127.0.0.1:2626で受信） |
+
+---
+
+## 💡 ユースケース
+### 📨 Follow / Accept
+1. https://example.com/users/alice が https://ipcnode.local/users/follow に Follow を送信
+
+2. activitypub-lmtp.py が受信し、Accept を自動生成
+
+3. Accept メッセージが LMTP 経由で返信され、inbox.json と outbox.json に反映
+
+4. Web UI (/) で一覧表示、フィルタ切替可
+
+---
+
+## 📝 Create（投稿）
+1. Web UI から type=Create のJSONを送信
+
+2. LMTP経由で inbox.json に反映（ローカル投稿／リモート配送テスト対応予定）
+
+---
 
 
