@@ -53,6 +53,8 @@ graph TD
 ```bash
 mta-activitypub/
 ├── docker-compose.yml
+├── Dockerfile.web
+├── Dockerfile.lmtp
 ├── web/
 │   ├── Dockerfile
 │   ├── requirements.txt
