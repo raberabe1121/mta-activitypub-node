@@ -17,6 +17,7 @@ HTTPではなく **SMTP/LMTPをIPC（プロセス間通信）として再利用*
 ---
 
 ## 🧩 アーキテクチャ
+
 ```mermaid
 graph TD
   subgraph Mail_Transport
