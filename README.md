@@ -79,11 +79,17 @@ mta-activitypub/
 
 ## 🚀 起動方法（Docker Compose）と動作確認
 ```bash
+# ビルド
+docker-compose build
+
 # 起動
 docker-compose up -d --build
 
 # Web UI にアクセス
 http://localhost:5000
+
+# LMTPサーバ確認
+docker logs -f activitypub_lmtp
 
 # Follow メッセージ送信
 curl -X POST http://127.0.0.1:5000/api/outbox_post \
