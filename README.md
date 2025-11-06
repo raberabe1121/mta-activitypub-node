@@ -51,20 +51,26 @@ graph TD
 ## 📂 ディレクトリ構成
 
 ```bash
-/usr/local/bin/
-├── activitypub-inbox.py          # 旧バージョンの受信処理（保持のみ）
-├── activitypub-lmtp.py           # LMTPハンドラ本体（Follow受信→Accept返信）
-├── activitypub-send.py           # LMTP経由でActivityPubメッセージを送信
-├── activitypub_lmtp_server.py    # LMTPサーバ実装（dovecot連携用）
+mta-activitypub/
+├── docker-compose.yml
+├── web/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── app.py
+├── lmtp/
+│   └── Dockerfile
+├── scripts/
+│   ├── activitypub-lmtp.py
+│   ├── activitypub-send.py
+│   ├── activitypub_lmtp_server.py
+│   └── activitypub-inbox.py
+└── data/
+    └── activitypub/
+        ├── inbox.json
+        ├── outbox.json
+        ├── messages.json
+        └── templates/
 
-/var/www/activitypub/
-├── app.py                        # Flask Web UI本体（Inbox / Outbox 管理画面）
-├── inbox.json                    # 受信メッセージ（LMTP経由で追加）
-├── outbox.json                   # 送信メッセージ履歴
-├── messages.json                 # Web UIでの統合ビュー
-├── templates/
-│   └── index.html                # Inbox/Outboxビュー（Follow/Acceptフィルタ付き）
-└── Maildir/                      # Dovecotローカルメール保存領域
 ```
 
 ---
