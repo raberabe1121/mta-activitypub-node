@@ -1,6 +1,0 @@
-FROM python:3.11-slim
-WORKDIR /app
-COPY var/www/activitypub /var/www/activitypub
-RUN pip install flask jinja2
-EXPOSE 5000
-CMD ["python3", "/var/www/activitypub/app.py"]
