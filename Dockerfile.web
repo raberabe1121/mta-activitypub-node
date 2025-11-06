@@ -1,0 +1,11 @@
+FROM python:3.11-slim
+WORKDIR /var/www/activitypub
+
+COPY web/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY web/app.py ./
+COPY web/templates ./templates
+
+EXPOSE 5000
+CMD ["python", "app.py"]
