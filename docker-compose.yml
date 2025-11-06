@@ -2,7 +2,9 @@ version: "3.9"
 
 services:
   web:
-    build: ./web
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     container_name: activitypub_web
     ports:
       - "5000:5000"
@@ -35,7 +37,9 @@ services:
     restart: unless-stopped
 
   lmtp:
-    build: ./lmtp
+    build:
+      context: .
+      dockerfile: Dockerfile.lmtp
     container_name: activitypub_lmtp
     ports:
       - "2626:2626"
