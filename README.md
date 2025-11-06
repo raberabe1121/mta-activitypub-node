@@ -98,9 +98,8 @@ cd mta-activitypub
 docker-compose up -d
 ```
 
----
+- 主要コンテナ
 
-## 主要コンテナ
 | サービス | 役割 |
 |-----------|------|
 | postfix | メール送信・配送制御 |
@@ -129,4 +128,44 @@ docker-compose up -d
 
 ---
 
+## 💻 Web UI 機能
+
+| 機能 | 説明 |
+|------|------|
+| 📬 **Inbox Viewer** | LMTPで受信したメッセージを一覧表示 |
+| 📨 **Accept自動返信** | Follow受信時、自動でAccept生成 |
+| 📤 **Outbox投稿** | WebフォームやAPIからFollow / Create送信 |
+| 🔍 **フィルタ表示** | Follow / Accept / Create 切り替え |
+| 🧩 **API** | `/api/inbox`, `/api/outbox`, `/api/outbox_post` |
+
+---
+
+## 🧠 開発の狙い
+- MTAを「分散ノード通信層」として再定義
+- ActivityPubを“メール的分散システム”として再実装
+- MastodonやThreadsのような分散SNSをメールプロトコルで実現
+
+---
+
+## 🧰 技術スタック
+- Python 3.11
+- Flask
+- Postfix / Dovecot
+- LMTP (Local Mail Transfer Protocol)
+- JSON-based ActivityPub
+- Docker Compose
+
+---
+
+## 🔧 今後の開発予定
+- Create（投稿）アクティビティ対応
+- Undo（フォロー解除）対応
+- InboxのWebSocket反映
+- Mastodonノードとの相互通信テスト
+
+---
+
+## 📜 ライセンス
+MIT License
+Copyright © 2025 Yoichi T.
 
