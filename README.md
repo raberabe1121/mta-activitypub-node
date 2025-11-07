@@ -6,8 +6,7 @@ HTTPではなく **SMTP/LMTPをIPC（プロセス間通信）として再利用*
 ---
 
 ## 🌐 概要
-このプロジェクトは、**電子メール（MTA）をActivityPubメッセージの伝送層として使う**  
-新しい分散SNSの通信基盤です。
+このプロジェクトは、**電子メール（MTA）をActivityPubメッセージの伝送層として使う**分散SNSの通信基盤です。
 
 - 各ノードが **「メールボックス＝Inbox/Outbox」** を持ちます  
 - ActivityPub メッセージを SMTP / LMTP で配送  
