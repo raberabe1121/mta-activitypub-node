@@ -106,7 +106,7 @@ activitypub-lmtp.py により自動で Accept が返信されます。
 |-----------|------|
 | postfix | メール送信・配送制御 |
 | dovecot | LMTP配信先（activitypub-lmtp.pyへパイプ） |
-| web | Flaskアプリ（/var/www/activitypub/app.py） |
+| web | Flaskアプリ（web/app.py） |
 | lmtp | LMTPサーバ（127.0.0.1:2626で受信） |
 
 ---
