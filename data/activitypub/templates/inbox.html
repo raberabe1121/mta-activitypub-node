@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ActivityPub Inbox & Outbox</title>
+<style>
+body {
+  font-family: sans-serif;
+  margin: 2em;
+  background: #fafafa;
+}
+.message {
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 1em;
+  margin-bottom: 1em;
+  border-radius: 8px;
+}
+.timestamp { color: #666; font-size: 0.9em; }
+pre { background: #f5f5f5; padding: 0.5em; border-radius: 6px; }
+button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #45a049;
+}
+.filter-buttons {
+  margin-bottom: 1em;
+}
+.filter-buttons button {
+  background: #2196F3;
+  margin-right: 0.5em;
+}
+.filter-buttons button.active {
+  background: #1976D2;
+}
+#send-section {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1em;
+  margin-bottom: 2em;
+}
+input[type="text"] {
+  width: 90%;
+  padding: 0.4em;
+  margin: 0.3em 0;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+</style>
+</head>
+<body>
+<h1>📮 ActivityPub Inbox & Sender</h1>
+
+<h2>📝 新規投稿（Create）</h2>
+<form id="createForm">
+  <label>宛先 (To):</label><br>
+  <input type="text" id="createTo" value="https://example.com/users/yoichi" style="width:80%"><br>
+  <label>本文 (Content):</label><br>
+  <textarea id="createContent" rows="3" style="width:80%"></textarea><br>
+  <button type="button" onclick="sendCreate()">📤 投稿送信</button>
+  <div id="createResult" style="margin-top:0.5em; color:green;"></div>
+  <hr>
+  </form>
+
+<div id="send-section">
+  <h3>📤 Followメッセージ送信</h3>
+  <form id="followForm">
+    <label>Actor（送信元URL）:</label><br>
+    <input type="text" id="actor" name="actor" value="https://ipcnode.local/users/follow"><br>
+    <label>Object（対象ユーザーURL）:</label><br>
+    <input type="text" id="object" name="object" value="https://example.com/users/alice"><br>
+    <button type="submit">➡️ Follow送信</button>
+  </form>
+  <div id="sendResult" style="margin-top:1em; color:green;"></div>
+</div>
+
+<div class="filter-buttons">
+  <button id="filterAll" class="active">すべて</button>
+  <button id="filterFollow">Followのみ</button>
+  <button id="filterAccept">Acceptのみ</button>
+</div>
+
+<div id="messages">
+  {% for msg in messages %}
+    <div class="message" data-type="{{ msg.activity.type if msg.activity else 'none' }}">
+      <div><strong>From:</strong> {{ msg.from or "(unknown)" }}</div>
+      <div><strong>To:</strong> {{ msg.to|join(", ") }}</div>
+      <div><strong>Subject:</strong> {{ msg.subject or "(none)" }}</div>
+      <div class="timestamp">{{ msg.timestamp }}</div>
+
+      {% if msg.activity %}
+        <h4>Activity:</h4>
+        <pre>{{ msg.activity | tojson(indent=2) }}</pre>
+
+        {% if msg.activity.type == "Follow" %}
+        <form method="POST" action="/reply" onsubmit="return sendAccept(this)">
+          <input type="hidden" name="actor" value="{{ msg.activity.actor }}">
+          <input type="hidden" name="object" value="{{ msg.activity.object }}">
+          <input type="hidden" name="mail_from" value="{{ (msg.to[0] if msg.to else 'follow@ipcnode.local') }}">
+          <input type="hidden" name="rcpt_to" value="{{ (msg.from or 'test@ipcnode.local') }}">
+          <button type="submit">✅ Accept返信</button>
+        </form>
+        {% endif %}
+      {% else %}
+        <h4>Body:</h4>
+        <pre>{{ msg.body }}</pre>
+      {% endif %}
+    </div>
+  {% else %}
+    <p>No messages found.</p>
+  {% endfor %}
+</div>
+
+<script>
+// ----- Accept送信（/api/reply 経由, リダイレクトなし） -----
+function formToJson(form) {
+  const fd = new FormData(form);
+  const obj = {};
+  for (const [k, v] of fd.entries()) obj[k] = v;
+  return obj;
+}
+
+async function sendAccept(formEl) {
+  try {
+    const payload = formToJson(formEl);
+    const res = await fetch('/api/reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      // 送信成功: 受信箱を更新
+      await loadInbox();
+    } else {
+      alert('Accept送信失敗: ' + (data.error || data.stderr || 'unknown'));
+    }
+  } catch (e) {
+    alert('Accept送信失敗: ' + e);
+  }
+  return false; // 既定のフォーム送信（リダイレクト）を抑止
+}
+
+// ----- Inbox 再描画 -----
+async function loadInbox() {
+  try {
+    const res = await fetch('/api/inbox');
+    const messages = await res.json();
+    const container = document.getElementById('messages');
+    if (!container) return;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      container.innerHTML = '<p>No messages found.</p>';
+      return;
+    }
+
+    // 新しいものが上に来るように並べ替え（ISO8601前提）
+    messages.sort((a, b) => {
+      const ta = (a && a.timestamp) ? a.timestamp : '';
+      const tb = (b && b.timestamp) ? b.timestamp : '';
+      return tb.localeCompare(ta);
+    });
+
+    container.innerHTML = messages.map(msg => {
+      const act = msg.activity;
+      let html = `<div class="message" data-type="${act ? (act.type || 'none') : 'none'}">` +
+        `<div><strong>From:</strong> ${msg.from || '(unknown)'} </div>` +
+        `<div><strong>To:</strong> ${(msg.to || []).join(', ')} </div>` +
+        `<div><strong>Subject:</strong> ${msg.subject || '(none)'} </div>` +
+        `<div class="timestamp">${msg.timestamp || ''}</div>`;
+
+      if (act) {
+        html += `<h4>Activity:</h4><pre>${JSON.stringify(act, null, 2)}</pre>`;
+        if (act.type === 'Create' && act.object && act.object.content) {
+          html += `<div style="background:#eef; padding:0.5em;">✏️ ${act.object.content}</div>`;
+        }
+        if (act.type === 'Follow') {
+          const mailFrom = (msg.to && msg.to[0]) ? msg.to[0] : 'follow@ipcnode.local';
+          const rcptTo = msg.from || 'test@ipcnode.local';
+          const actor = act.actor || '';
+          const object = act.object || '';
+          html += `<form method="POST" action="/reply" onsubmit="return sendAccept(this)">`+
+                  `<input type="hidden" name="actor" value="${actor}">`+
+                  `<input type="hidden" name="object" value="${object}">`+
+                  `<input type="hidden" name="mail_from" value="${mailFrom}">`+
+                  `<input type="hidden" name="rcpt_to" value="${rcptTo}">`+
+                  `<button type="submit">✅ Accept返信</button>`+
+                  `</form>`;
+        }
+      } else if (msg.body) {
+        html += `<h4>Body:</h4><pre>${msg.body}</pre>`;
+      }
+
+      html += `</div>`;
+      return html;
+    }).join('');
+  } catch (e) {
+    console.error('Failed to load inbox:', e);
+  }
+}
+
+async function sendCreate() {
+  const to = document.getElementById('createTo').value;
+  const content = document.getElementById('createContent').value;
+  try {
+    const res = await fetch('/api/outbox_post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'Create',
+        actor: 'https://ipcnode.local/users/follow',
+        object: { type: 'Note', content, published: new Date().toISOString() },
+        rcpt_to: 'test@ipcnode.local'
+      })
+    });
+    const data = await res.json();
+    const msg = data.status === 'ok' ? `✅ Create送信成功` : `❌ Create送信失敗: ${data.error || data.stderr}`;
+    const out = document.getElementById('createResult');
+    if (out) out.textContent = msg;
+    else alert('Create送信結果: ' + (data.status || 'unknown'));
+    await loadInbox();
+  } catch (e) {
+    const out = document.getElementById('createResult');
+    const msg = `❌ Create送信失敗: ${e}`;
+    if (out) out.textContent = msg; else alert(msg);
+  }
+}
+
+// ----- Follow送信 -----
+document.getElementById("followForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const actor = document.getElementById("actor").value;
+  const object = document.getElementById("object").value;
+  const res = await fetch("/api/outbox_post", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      type: "Follow",
+      actor: actor,
+      object: object
+    })
+  });
+  const data = await res.json();
+  document.getElementById("sendResult").textContent =
+    data.status === "ok"
+      ? `✅ 送信成功: ${data.activity.type} → ${data.sent_to}`
+      : `❌ 送信失敗: ${data.error || data.stderr}`;
+});
+
+// ----- フィルタ切り替え -----
+const buttons = document.querySelectorAll(".filter-buttons button");
+buttons.forEach(btn => btn.addEventListener("click", () => {
+  buttons.forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const type = btn.id.replace("filter", "");
+  document.querySelectorAll(".message").forEach(m => {
+    const t = m.dataset.type || "none";
+    m.style.display = (type === "All" || t.toLowerCase() === type.toLowerCase()) ? "" : "none";
+  });
+}));
+
+// 初回読み込み
+loadInbox();
+
+// ----- 定期リロード（10秒） -----
+setInterval(() => { loadInbox(); }, 10000);
+</script>
+
+</body>
+</html>
